@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BIXI Data Reliability</title>
+  <style>
+    :root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f6f8f6; color: #193029; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { background: #10392d; color: #fff; padding: 26px max(24px, calc((100vw - 1180px)/2)); display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .logo { background: #a8eb78; color: #10392d; border-radius: 12px; padding: 10px 12px; font-weight: 900; letter-spacing: -1px; }
+    h1 { margin: 0; font-size: 20px; letter-spacing: -.4px; }
+    header p { margin: 4px 0 0; color: #c2d9cc; font-size: 13px; }
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+    button, a.button { border: 1px solid #b8d9c8; background: transparent; color: #fff; padding: 9px 13px; border-radius: 9px; font: inherit; font-size: 13px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+    button.primary { background: #a8eb78; color: #10392d; border-color: #a8eb78; font-weight: 700; }
+    main { max-width: 1228px; padding: 30px 24px 70px; margin: auto; }
+    .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 1.6px; color: #59766a; font-weight: 800; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+    h2 { margin: 5px 0 0; font-size: 30px; letter-spacing: -.9px; }
+    .updated { color: #668074; font-size: 13px; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+    .card, .panel { background: white; border: 1px solid #e0e9e2; border-radius: 15px; box-shadow: 0 8px 24px rgba(13, 55, 32, .035); }
+    .card { padding: 21px; min-height: 116px; }
+    .card .label { color: #60776a; font-size: 13px; }
+    .card .value { display: block; margin-top: 13px; font-weight: 800; font-size: 28px; letter-spacing: -.7px; }
+    .card .detail { display: block; color: #75877d; font-size: 12px; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); gap: 16px; }
+    .panel { padding: 20px 22px; min-width: 0; }
+    .panel h3 { font-size: 17px; margin: 0; letter-spacing: -.3px; }
+    .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+    .hint { font-size: 12px; color: #718579; margin: 5px 0 0; }
+    input { border: 1px solid #d5e2d8; border-radius: 8px; padding: 9px 11px; min-width: 180px; background: #fff; color: #193029; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; color: #708578; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; font-weight: 800; }
+    td, th { border-bottom: 1px solid #edf2ed; padding: 10px 8px; }
+    tr:last-child td { border-bottom: 0; }
+    .numeric { text-align: right; font-variant-numeric: tabular-nums; }
+    .pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 99px; background: #e8f7e3; color: #2d6c35; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .pill.warning { background: #fff2d9; color: #926114; }
+    .pill.critical, .pill.failed { background: #ffe4e1; color: #a23932; }
+    .pill.skipped { background: #eef2f3; color: #60767b; }
+    .stack { display: grid; gap: 16px; }
+    .empty { color: #6e8174; font-size: 13px; padding: 12px 0; }
+    .incident { border-bottom: 1px solid #edf2ed; padding: 10px 0; }
+    .incident:last-child { border-bottom: 0; }
+    .incident-title { font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+    .incident small { color: #718579; }
+    .error { background: #ffe4e1; color: #8f322d; padding: 10px 14px; border-radius: 9px; margin-bottom: 16px; display: none; }
+    @media (max-width: 850px) { .metrics { grid-template-columns: repeat(2, 1fr); } .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 560px) { header { align-items: start; flex-direction: column; } .metrics { gap: 9px; } .card { padding: 16px; } .card .value { font-size: 23px; } .intro { align-items: start; flex-direction: column; } input { min-width: 120px; width: 130px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="logo">BIXI</div><div><h1>Data Reliability</h1><p>Montréal station feed monitoring</p></div></div>
+    <div class="header-actions"><a class="button" href="/docs">API docs</a><button id="refresh">Refresh</button><button id="collect" class="primary">Collect now</button></div>
+  </header>
+  <main>
+    <div class="intro"><div><span class="eyebrow">Pipeline overview</span><h2>Station feed health</h2></div><div class="updated" id="updated">Loading latest data…</div></div>
+    <div class="error" id="error"></div>
+    <div class="metrics">
+      <div class="card"><span class="label">Latest run</span><span class="value" id="run-status">—</span><span class="detail" id="run-detail">No runs yet</span></div>
+      <div class="card"><span class="label">Feed freshness</span><span class="value" id="freshness">—</span><span class="detail">Since source update</span></div>
+      <div class="card"><span class="label">Stations tracked</span><span class="value" id="station-count">—</span><span class="detail">From newest stored snapshot</span></div>
+      <div class="card"><span class="label">Open incidents</span><span class="value" id="incident-count">—</span><span class="detail">Quality checks needing attention</span></div>
+    </div>
+    <div class="grid">
+      <section class="panel"><div class="panel-head"><div><h3>Station availability</h3><p class="hint">Search or inspect stations with the fewest available bikes.</p></div><input id="station-search" aria-label="Search stations" placeholder="Search stations"></div><div style="overflow-x:auto"><table><thead><tr><th>Station</th><th class="numeric">Bikes</th><th class="numeric">Docks</th><th>Status</th></tr></thead><tbody id="station-rows"></tbody></table></div><p class="hint" id="station-footnote"></p></section>
+      <div class="stack"><section class="panel"><div class="panel-head"><h3>Active incidents</h3></div><div id="incidents"></div></section><section class="panel"><div class="panel-head"><h3>Recent runs</h3></div><div style="overflow-x:auto"><table><thead><tr><th>Run</th><th>Status</th><th class="numeric">Records</th></tr></thead><tbody id="run-rows"></tbody></table></div></section></div>
+    </div>
+  </main>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    let stations = [];
+    const stamp = (value) => value ? new Date(value).toLocaleString() : '—';
+    const cell = (row, value, className = '') => { const td = document.createElement('td'); td.textContent = value; td.className = className; row.appendChild(td); return td; };
+    const pill = (value) => { const badge = document.createElement('span'); badge.className = 'pill ' + String(value).toLowerCase(); badge.textContent = value; return badge; };
+
+    function renderStations() {
+      const search = $('station-search').value.trim().toLowerCase();
+      const filtered = stations.filter((station) => `${station.name || ''} ${station.station_id}`.toLowerCase().includes(search));
+      filtered.sort((a, b) => a.bikes_available - b.bikes_available || String(a.station_id).localeCompare(String(b.station_id)));
+      $('station-rows').replaceChildren();
+      for (const station of filtered.slice(0, 30)) {
+        const row = document.createElement('tr');
+        cell(row, station.name || station.station_id);
+        cell(row, station.bikes_available, 'numeric');
+        cell(row, station.docks_available, 'numeric');
+        cell(row, station.is_renting ? 'Renting' : 'Unavailable');
+        $('station-rows').appendChild(row);
+      }
+      $('station-footnote').textContent = `Showing ${Math.min(30, filtered.length)} of ${filtered.length} matching stations`;
+    }
+
+    async function load() {
+      try {
+        const paths = ['/health', '/runs', '/incidents?status_filter=open', '/stations'];
+        const responses = await Promise.all(paths.map((path) => fetch(path)));
+        if (responses.some((response) => !response.ok)) throw new Error('An API request failed');
+        const [health, runs, incidents, currentStations] = await Promise.all(responses.map((response) => response.json()));
+        $('error').style.display = 'none';
+        $('run-status').textContent = health.latest_run_status || 'No runs';
+        $('run-detail').textContent = runs.length ? `Run #${runs[0].id} · ${stamp(runs[0].created_at)}` : 'No runs yet';
+        $('freshness').textContent = health.latest_snapshot_at ? `${Math.max(0, Math.round((Date.now() - new Date(health.latest_snapshot_at).getTime()) / 60000))} min` : '—';
+        $('station-count').textContent = currentStations.length.toLocaleString();
+        $('incident-count').textContent = incidents.length.toLocaleString();
+        $('updated').textContent = `Dashboard refreshed ${new Date().toLocaleTimeString()} · Feed ${stamp(health.latest_snapshot_at)}`;
+        stations = currentStations;
+        renderStations();
+        $('incidents').replaceChildren();
+        if (!incidents.length) { const empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'No active incidents'; $('incidents').appendChild(empty); }
+        for (const incident of incidents.slice(0, 8)) {
+          const item = document.createElement('div'); item.className = 'incident';
+          const title = document.createElement('div'); title.className = 'incident-title'; title.textContent = incident.rule_name.replaceAll('_', ' ');
+          const meta = document.createElement('small'); meta.textContent = `${incident.severity.toUpperCase()} · Run #${incident.ingestion_run_id}`;
+          item.append(title, meta); $('incidents').appendChild(item);
+        }
+        $('run-rows').replaceChildren();
+        for (const run of runs.slice(0, 8)) {
+          const row = document.createElement('tr');
+          cell(row, `#${run.id}`);
+          const statusCell = document.createElement('td'); statusCell.appendChild(pill(run.status)); row.appendChild(statusCell);
+          cell(row, run.records_received.toLocaleString(), 'numeric');
+          $('run-rows').appendChild(row);
+        }
+      } catch (error) { $('error').textContent = `Could not load dashboard: ${error.message}`; $('error').style.display = 'block'; }
+    }
+    $('station-search').addEventListener('input', renderStations);
+    $('refresh').addEventListener('click', load);
+    $('collect').addEventListener('click', async () => {
+      $('collect').disabled = true;
+      try { const response = await fetch('/ingest', { method: 'POST' }); if (!response.ok) throw new Error('Queue unavailable'); await load(); }
+      catch (error) { $('error').textContent = error.message; $('error').style.display = 'block'; }
+      finally { $('collect').disabled = false; }
+    });
+    load(); setInterval(load, 60000);
+  </script>
+</body>
+</html>

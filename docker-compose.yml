@@ -29,6 +29,15 @@ services:
       redis:
         condition: service_started
 
+  scheduler:
+    build: .
+    command: python -m app.scheduler
+    environment:
+      INGEST_API_URL: http://api:8000/ingest
+      INGEST_INTERVAL_SECONDS: 300
+    depends_on:
+      - api
+
   postgres:
     image: postgres:16-alpine
     environment:

@@ -106,7 +106,7 @@
         $('run-detail').textContent = runs.length ? `Run #${runs[0].id} · ${stamp(runs[0].created_at)}` : 'No runs yet';
         $('freshness').textContent = health.latest_snapshot_at ? `${Math.max(0, Math.round((Date.now() - new Date(health.latest_snapshot_at).getTime()) / 60000))} min` : '—';
         $('station-count').textContent = currentStations.length.toLocaleString();
-        $('incident-count').textContent = incidents.length.toLocaleString();
+        $('incident-count').textContent = health.open_incidents.toLocaleString();
         $('updated').textContent = `Dashboard refreshed ${new Date().toLocaleTimeString()} · Feed ${stamp(health.latest_snapshot_at)}`;
         stations = currentStations;
         renderStations();

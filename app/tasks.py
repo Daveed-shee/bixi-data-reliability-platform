@@ -75,7 +75,8 @@ def collect_and_validate(run_id: int) -> None:
             ) is not None
             seen_ids: set[str] = set()
             for raw_station in stations if not already_stored else []:
-                station_id = str(raw_station.get("station_id", ""))
+                raw_station_id = raw_station.get("station_id")
+                station_id = str(raw_station_id) if raw_station_id is not None else ""
                 bikes = _inventory(raw_station, "num_bikes_available")
                 docks = _inventory(raw_station, "num_docks_available")
                 if not station_id or station_id in seen_ids or bikes is None or docks is None or bikes < 0 or docks < 0:

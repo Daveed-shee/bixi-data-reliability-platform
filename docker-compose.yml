@@ -34,7 +34,7 @@ services:
     command: python -m app.scheduler
     environment:
       INGEST_API_URL: http://api:8000/ingest
-      INGEST_INTERVAL_SECONDS: 300
+      INGEST_INTERVAL_SECONDS: 3600
     depends_on:
       - api
 

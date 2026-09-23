@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    interval = max(60, int(os.getenv("INGEST_INTERVAL_SECONDS", "300")))
+    interval = max(60, int(os.getenv("INGEST_INTERVAL_SECONDS", "3600")))
     api_url = os.getenv("INGEST_API_URL", "http://api:8000/ingest")
     while True:
         try:

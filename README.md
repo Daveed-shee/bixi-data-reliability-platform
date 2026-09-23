@@ -9,7 +9,7 @@ BIXI publishes a live station feed and historical trip files. This gives the pro
 ## Phase 1 architecture
 
 ```text
-Scheduler (every 5 min) -> FastAPI /ingest -> Redis/RQ queue -> worker
+Scheduler (hourly) -> FastAPI /ingest -> Redis/RQ queue -> worker
                                                          |
                                              BIXI GBFS status + information
                                                          |
@@ -32,7 +32,7 @@ Install and start Docker Desktop, then from this folder:
 docker compose up --build -d
 ```
 
-Open [the dashboard](http://localhost:8000/dashboard) or [the API documentation](http://localhost:8000/docs). The scheduler submits its first run after startup and continues every five minutes. You can also start a run manually:
+Open [the dashboard](http://localhost:8000/dashboard) or [the API documentation](http://localhost:8000/docs). The scheduler submits its first run after startup and continues once per hour. You can also start a run manually:
 
 ```bash
 curl -X POST http://localhost:8000/ingest

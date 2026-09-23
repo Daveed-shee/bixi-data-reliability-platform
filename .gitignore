@@ -1,8 +1,15 @@
 .env
+.env.*
 .DS_Store
 .venv/
 __pycache__/
 .pytest_cache/
 *.pyc
 *.db
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
 data/

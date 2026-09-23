@@ -3,5 +3,12 @@
 __pycache__
 .pytest_cache
 .env
+.env.*
 *.db
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+service-account*.json
 data
